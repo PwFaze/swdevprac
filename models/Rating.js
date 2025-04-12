@@ -28,6 +28,4 @@ const RatingSchema = new mongoose.Schema(
   },
 );
 
-const Rating = mongoose.model("Rating", RatingSchema);
-
-(module.exports = Rating), calculateAverageRating;
+module.exports = mongoose.model("Rating", RatingSchema);

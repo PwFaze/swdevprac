@@ -10,6 +10,7 @@ connectDB();
 
 const rooms = require("./routes/rooms");
 const reservations = require("./routes/reservations");
+const ratings = require("./routes/ratings");
 const auth = require("./routes/auth");
 
 const app = express();
@@ -62,6 +63,7 @@ app.use(
 app.use("/api/v1/rooms", rooms);
 app.use("/api/v1/reservations", reservations);
 app.use("/api/v1/auth", auth);
+app.use("/api/v1/ratings", ratings);
 
 const PORT = process.env.PORT || 5000;
 

@@ -66,6 +66,7 @@ exports.getRooms = async (req, res, next) => {
       data: rooms,
     });
   } catch (error) {
+    console.log(error);
     res.status(400).json({ success: false });
   }
 };

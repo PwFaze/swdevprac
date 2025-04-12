@@ -27,6 +27,7 @@ const RoomSchema = new mongoose.Schema(
     },
     averageRating: {
       type: Number,
+      default: 0,
       min: [1, "Rating must be at least 1"],
       max: [5, "Rating must can not be more than 5"],
     },
@@ -41,10 +42,10 @@ const RoomSchema = new mongoose.Schema(
   },
 );
 
-RoomSchema.virtual("appointments", {
-  ref: "Appointment",
+RoomSchema.virtual("reservations", {
+  ref: "Reservation",
   localField: "_id",
-  foreignField: "hospital",
+  foreignField: "room",
   justOne: false,
 });
 
