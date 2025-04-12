@@ -1,10 +1,10 @@
-const Appointment = require("../models/Appointment");
-const Hospital = require("../models/Hospital");
+const Reservation = require("../models/Reservation");
+const Room = require("../models/Room");
 
-//@desc Get all hospitals
-//@route GET /api/v1/hospitals
+//@desc Get all rooms
+//@route GET /api/v1/rooms
 //@access Public
-exports.getHospitals = async (req, res, next) => {
+exports.getRooms = async (req, res, next) => {
   try {
     let query;
 
@@ -17,9 +17,9 @@ exports.getHospitals = async (req, res, next) => {
     let queryString = JSON.stringify(reqQuery);
     queryString = queryString.replace(
       /\b(gt|gte|lt|lte|in)\b/g,
-      (match) => `$${match}`
+      (match) => `$${match}`,
     );
-    query = Hospital.find(JSON.parse(queryString)).populate("appointments");
+    query = Room.find(JSON.parse(queryString)).populate("reservations");
 
     if (req.query.select) {
       const fields = req.query.select.split(",").join(" ");
@@ -37,11 +37,11 @@ exports.getHospitals = async (req, res, next) => {
     const limit = parseInt(req.query.limit, 10) || 25;
     const startIndex = (page - 1) * limit;
     const endIndex = page * limit;
-    const total = await Hospital.countDocuments();
+    const total = await Room.countDocuments();
 
     query = query.skip(startIndex).limit(limit);
 
-    const hospitals = await query;
+    const rooms = await query;
 
     const pagination = {};
 
@@ -61,79 +61,79 @@ exports.getHospitals = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
-      count: hospitals.length,
+      count: rooms.length,
       pagination,
-      data: hospitals,
+      data: rooms,
     });
   } catch (error) {
     res.status(400).json({ success: false });
   }
 };
 
-//@desc Get single hospital
-//@route GET /api/v1/hospitals/:id
+//@desc Get single room
+//@route GET /api/v1/rooms/:id
 //@access Public
-exports.getHospital = async (req, res, next) => {
+exports.getRoom = async (req, res, next) => {
   try {
-    const hospital = await Hospital.findById(req.params.id);
+    const room = await Room.findById(req.params.id);
 
-    if (!hospital) {
+    if (!room) {
       return res.status(404).json({ success: false });
     }
 
     res.status(200).json({
       success: true,
-      data: hospital,
+      data: room,
     });
   } catch (error) {
     res.status(400).json({ success: false });
   }
 };
 
-//@desc Create new hospital
-//@route POST /api/v1/hospitals
+//@desc Create new room
+//@route POST /api/v1/rooms
 //@access Private
-exports.createHospital = async (req, res, next) => {
-  const hospital = await Hospital.create(req.body);
+exports.createRoom = async (req, res, next) => {
+  const room = await Room.create(req.body);
   res.status(201).json({
     success: true,
-    data: hospital,
+    data: room,
   });
 };
 
-//@desc Update hospital
-//@route PUT /api/v1/hospitals/:id
+//@desc Update room
+//@route PUT /api/v1/rooms/:id
 //@access Private
-exports.updateHospital = async (req, res, next) => {
+exports.updateRoom = async (req, res, next) => {
   try {
-    const hospital = await Hospital.findByIdAndUpdate(req.params.id, req.body, {
+    const room = await Room.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
       runValidators: true,
     });
 
-    if (!hospital) {
+    if (!room) {
       return res.status(400).json({ success: false });
     }
 
-    res.status(200).json({ success: true, data: hospital });
+    res.status(200).json({ success: true, data: room });
   } catch (error) {
     res.status(400).json({ success: false });
   }
 };
 
-//@desc Delete hospital
-//@route DELETE /api/v1/hospitals/:id
+//@desc Delete room
+//@route DELETE /api/v1/rooms/:id
 //@access Private
-exports.deleteHospital = async (req, res, next) => {
+exports.deleteRoom = async (req, res, next) => {
   try {
-    const hospital = await Hospital.findById(req.params.id);
+    const room = await Room.findById(req.params.id);
 
-    if (!hospital) {
+    if (!room) {
       return res.status(404).json({ success: false });
     }
 
-    await Appointment.deleteMany({ hospital: req.params.id });
-    await Hospital.deleteOne({ _id: req.params.id });
+    await Reservation.deleteMany({ room: req.params.id });
+    await Room.deleteOne({ _id: req.params.id });
 
     res.status(200).json({ success: true, data: {} });
   } catch (error) {

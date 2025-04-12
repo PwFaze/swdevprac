@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const HospitalSchema = new mongoose.Schema(
+const RoomSchema = new mongoose.Schema(
   {
     name: {
       type: String,
@@ -13,38 +13,39 @@ const HospitalSchema = new mongoose.Schema(
       type: String,
       required: [true, "Please add an address"],
     },
-    district: {
-      type: String,
-      required: [true, "Please add a district"],
-    },
-    province: {
-      type: String,
-      required: [true, "Please add a province"],
-    },
-    postalcode: {
-      type: String,
-      required: [true, "Please add a postal code"],
-      maxlength: [5, "Postal code can not be more than 5 digits"],
-    },
     tel: {
       type: String,
+      required: [true, "Please add an telephone number"],
     },
-    region: {
+    openHours: {
       type: String,
-      required: [true, "Please add a region"],
+      required: [true, "Please add open hours"],
+    },
+    closeHours: {
+      type: String,
+      required: [true, "Please add close hours"],
+    },
+    averageRating: {
+      type: Number,
+      min: [1, "Rating must be at least 1"],
+      max: [5, "Rating must can not be more than 5"],
+    },
+    averageRatingCount: {
+      type: Number,
+      default: 0,
     },
   },
   {
     toJSON: { virtuals: true },
     toObject: { virtuals: true },
-  }
+  },
 );
 
-HospitalSchema.virtual("appointments", {
+RoomSchema.virtual("appointments", {
   ref: "Appointment",
   localField: "_id",
   foreignField: "hospital",
   justOne: false,
 });
 
-module.exports = mongoose.model("Hospital", HospitalSchema);
+module.exports = mongoose.model("Room", RoomSchema);

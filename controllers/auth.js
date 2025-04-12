@@ -5,7 +5,7 @@ const sendTokenResponse = (user, statusCode, res) => {
 
   const options = {
     expires: new Date(
-      Date.now() + process.env.JWT_COOKIE_EXPIRE * 24 * 60 * 60 * 1000
+      Date.now() + process.env.JWT_COOKIE_EXPIRE * 24 * 60 * 60 * 1000,
     ),
     httpOnly: true,
   };
@@ -25,12 +25,13 @@ const sendTokenResponse = (user, statusCode, res) => {
 // @access  Public
 exports.register = async (req, res, next) => {
   try {
-    const { name, email, password, role } = req.body;
+    const { name, email, password, telephoneNumber, role } = req.body;
 
     const user = await User.create({
       name,
       email,
       password,
+      telephoneNumber,
       role,
     });
 
@@ -70,7 +71,6 @@ exports.login = async (req, res, next) => {
         .status(401)
         .json({ success: false, error: "Invalid credentials" });
     }
-
     sendTokenResponse(user, 200, res);
   } catch (err) {
     return res.status(401).json({
@@ -100,4 +100,18 @@ exports.logout = async (req, res, next) => {
     success: true,
     data: {},
   });
+};
+
+exports.updateUser = async (req, res, next) => {
+  try {
+    const user = await User.findByIdAndUpdate(req.user.id, req.body, {
+      new: true,
+      runValidators: true,
+    });
+
+    res.status(200).json({ success: true, data: user });
+  } catch (err) {
+    res.status(400).json({ success: false });
+    console.log(err.stack);
+  }
 };

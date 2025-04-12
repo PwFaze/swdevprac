@@ -8,8 +8,8 @@ dotenv.config({ path: "./config/config.env" });
 
 connectDB();
 
-const hospitals = require("./routes/hospitals");
-const appointments = require("./routes/appointments");
+const rooms = require("./routes/rooms");
+const reservations = require("./routes/reservations");
 const auth = require("./routes/auth");
 
 const app = express();
@@ -57,10 +57,10 @@ app.use(
     origin: "http://localhost:5173",
 
     credentials: true,
-  })
+  }),
 );
-app.use("/api/v1/hospitals", hospitals);
-app.use("/api/v1/appointments", appointments);
+app.use("/api/v1/rooms", rooms);
+app.use("/api/v1/reservations", reservations);
 app.use("/api/v1/auth", auth);
 
 const PORT = process.env.PORT || 5000;
@@ -71,8 +71,8 @@ const server = app.listen(
     "Server running in ",
     process.env.NODE_ENV,
     " mode on port ",
-    PORT
-  )
+    PORT,
+  ),
 );
 
 process.on("unhandledRejection", (err, promise) => {
