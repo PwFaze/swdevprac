@@ -9,7 +9,12 @@ const RatingSchema = new mongoose.Schema(
     },
     room: {
       type: mongoose.Schema.ObjectId,
-      ref: "Product",
+      ref: "Room",
+      required: true,
+    },
+    reservation: {
+      type: mongoose.Schema.ObjectId,
+      ref: "Reservation",
       required: true,
     },
     rating: {
@@ -29,5 +34,6 @@ const RatingSchema = new mongoose.Schema(
     toObject: { virtuals: true },
   },
 );
+RatingSchema.index({ reservation: 1, user: 1 }, { unique: true });
 
 module.exports = mongoose.model("Rating", RatingSchema);
