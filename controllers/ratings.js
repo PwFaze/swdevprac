@@ -4,12 +4,22 @@ const Room = require("../models/Room");
 
 exports.getRatings = async (req, res, next) => {
   try {
-    const ratings = await Rating.find();
+    let ratings;
+
+    if (req.user.role === "admin") {
+      ratings = await Rating.find().populate("reservation");
+    } else {
+      ratings = await Rating.find({ user: req.user.id }).populate(
+        "reservation",
+      );
+    }
+
     res.status(200).json(ratings);
   } catch (error) {
     next(error);
   }
 };
+
 exports.getRating = async (req, res, next) => {
   try {
     const rating = await Rating.findById(req.params.id);
@@ -44,7 +54,16 @@ exports.createRating = async (req, res, next) => {
 
 exports.updateRating = async (req, res, next) => {
   try {
-    const rating = await Rating.findByIdAndUpdate(req.params.id, req.body, {
+    const rating = await Rating.findById(req.params.id);
+    if (!rating) {
+      return res
+        .status(404)
+        .json({ success: false, error: "Rating not found" });
+    }
+    if (req.user.id !== rating.user.toString() && req.user.role !== "admin") {
+      return res.status(403).json({ success: false, error: "Unauthorized" });
+    }
+    await Rating.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
       runValidators: true,
     });
