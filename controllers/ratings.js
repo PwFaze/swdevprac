@@ -62,10 +62,17 @@ exports.updateRating = async (req, res, next) => {
 };
 exports.deleteRating = async (req, res, next) => {
   try {
-    const rating = await Rating.findByIdAndDelete(req.params.id);
-    console.log(rating);
+    const rating = await Rating.findById(req.params.id);
+    if (!rating) {
+      return res
+        .status(404)
+        .json({ success: false, error: "Rating not found" });
+    }
+    if (req.user.id !== rating.user.toString() && req.user.role !== "admin") {
+      return res.status(403).json({ success: false, error: "Unauthorized" });
+    }
+    await Rating.findByIdAndDelete(req.params.id);
     await updateRoomRating(rating.room);
-
     if (!rating) {
       return res
         .status(404)
