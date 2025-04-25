@@ -40,8 +40,8 @@ const UserSchema = new mongoose.Schema(
       default: Date.now,
     },
     isVerified: {
-    type: Boolean,
-    default: false
+      type: Boolean,
+      default: false,
     },
     profilePicture: {
       type: String,
@@ -54,38 +54,39 @@ const UserSchema = new mongoose.Schema(
     toJSON: { virtuals: true },
     toObject: { virtuals: true },
   },
+);
 
-
+// 🔐 Encrypt password before saving
 UserSchema.pre("save", async function (next) {
-  if (this.isModified('password')) {
-    if (!this.password) {
-      throw new Error("Password is required");
-    }
-    const salt = await bcrypt.genSalt(10);
-    this.password = await bcrypt.hash(this.password, salt);
-  }
-  
+  if (!this.isModified("password")) return next();
+
+  const salt = await bcrypt.genSalt(10);
+  this.password = await bcrypt.hash(this.password, salt);
+  next();
 });
 
+// 🔑 Generate JWT Token
 UserSchema.methods.getSignedJwtToken = function () {
   return jwt.sign({ id: this._id }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRE,
   });
 };
 
+// 🔁 Match entered password to hashed password
 UserSchema.methods.matchPassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };
 
+// 📧 Generate Email Verification Token
 UserSchema.methods.generateVerificationToken = function () {
   const verificationToken = jwt.sign(
     { id: this._id, email: this.email },
     process.env.JWT_SECRET,
-    { expiresIn: "1h" }
+    { expiresIn: "1h" },
   );
 
   this.verificationToken = verificationToken;
-  this.verificationExpires = Date.now() + 3600000; // Token expires in 1 hour
+  this.verificationExpires = Date.now() + 3600000; // 1 hour
   return verificationToken;
 };
 
