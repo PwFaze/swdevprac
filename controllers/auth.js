@@ -33,14 +33,16 @@ const sendTokenResponse = (user, statusCode, res) => {
 // @access  Public
 exports.register = async (req, res, next) => {
   try {
-    const { name, email, password, telephoneNumber, role } = req.body;
-
+    const { name, email, password, telephoneNumber, role, profilePicture } =
+      req.body;
+    console.log(profilePicture);
     const user = await User.create({
       name,
       email,
       password,
       telephoneNumber,
       role,
+      profilePicture,
     });
     
     const verificationToken = user.generateVerificationToken();
