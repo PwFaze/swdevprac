@@ -31,11 +31,12 @@ exports.createRating = async (req, res, next) => {
     if (!room) {
       return res.status(404).json({ success: false, error: "Room not found" });
     }
-    room.averageRatingCount += 1;
     room.averageRating =
-      (room.averageRating + req.body.rating) / room.averageRatingCount;
+      (room.averageRating * room.averageRatingCount + req.body.rating) /
+      (room.averageRatingCount + 1);
+    room.averageRatingCount += 1;
     await room.save();
-    res.status(201).json(rating);
+    res.status(201).json({ success: true, data: rating });
   } catch (error) {
     next(error);
   }
@@ -47,11 +48,13 @@ exports.updateRating = async (req, res, next) => {
       new: true,
       runValidators: true,
     });
+    await updateRoomRating(rating.room);
     if (!rating) {
       return res
         .status(404)
         .json({ success: false, error: "Rating not found" });
     }
+
     res.status(200).json(rating);
   } catch (error) {
     next(error);
@@ -60,13 +63,32 @@ exports.updateRating = async (req, res, next) => {
 exports.deleteRating = async (req, res, next) => {
   try {
     const rating = await Rating.findByIdAndDelete(req.params.id);
+    console.log(rating);
+    await updateRoomRating(rating.room);
+
     if (!rating) {
       return res
         .status(404)
         .json({ success: false, error: "Rating not found" });
     }
+
     res.status(200).json({ success: true, data: {} });
   } catch (error) {
     next(error);
   }
+};
+
+const updateRoomRating = async (roomId) => {
+  const ratings = await Rating.find({ room: roomId });
+
+  const averageRatingCount = ratings.length;
+  const averageRating =
+    averageRatingCount > 0
+      ? ratings.reduce((sum, r) => sum + r.rating, 0) / averageRatingCount
+      : 0;
+
+  await Room.findByIdAndUpdate(roomId, {
+    averageRating,
+    averageRatingCount,
+  });
 };

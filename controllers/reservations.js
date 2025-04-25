@@ -27,7 +27,6 @@ exports.getReservations = async (req, res, next) => {
 
   try {
     const reservations = await query;
-
     res.status(200).json({
       success: true,
       count: reservations.length,
@@ -68,8 +67,8 @@ exports.getReservation = async (req, res, next) => {
 // @access Private
 exports.addReservation = async (req, res, next) => {
   try {
+    console.log(req.user);
     req.body.room = req.params.roomId;
-
     const room = await Room.findById(req.params.roomId);
 
     if (!room) {
@@ -82,6 +81,7 @@ exports.addReservation = async (req, res, next) => {
     });
 
     if (existingReservation.length >= 3 && req.user.role !== "admin") {
+      console.log("DSLKDJS");
       return res.status(400).json({
         success: false,
         message: "You can only book 3 reservations",
@@ -95,6 +95,7 @@ exports.addReservation = async (req, res, next) => {
       data: reservation,
     });
   } catch (error) {
+    console.log(error);
     res.status(500).json({ success: false });
   }
 };
@@ -146,6 +147,7 @@ exports.deleteReservation = async (req, res, next) => {
       reservation.user.toString() !== req.user.id &&
       req.user.role !== "admin"
     ) {
+      console.log(req.user);
       return res.status(401).json({
         success: false,
         message: "You are not authorized to delete this reservation",

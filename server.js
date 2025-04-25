@@ -26,14 +26,14 @@ const swaggerUI = require("swagger-ui-express");
 app.use(express.json());
 app.use(cookieParser());
 app.use(mongoSanitize());
-app.use(helmet());
-app.use(xss());
+// app.use(helmet());
+// app.use(xss());
 
-const limiter = rateLimit({
-  windowsMs: 10 * 60 * 1000, //10 mins
-  max: 10,
-});
-app.use(limiter);
+// const limiter = rateLimit({
+//   windowsMs: 10 * 60 * 1000, //10 mins
+//   max: 10,
+// });
+// app.use(limiter);
 
 const swaggerOptions = {
   swaggerDefinition: {
