@@ -1,4 +1,6 @@
 const User = require("../models/User");
+const sendEmailConfirmation = require("../utils/sendEmail");
+const jwt = require('jsonwebtoken');
 
 const sendTokenResponse = (user, statusCode, res) => {
   const token = user.getSignedJwtToken();
@@ -17,7 +19,13 @@ const sendTokenResponse = (user, statusCode, res) => {
   res
     .status(statusCode)
     .cookie("token", token, options)
-    .json({ success: true, token });
+    .json({
+      success: true,
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      token
+     });
 };
 
 // @desc    Register a user
@@ -34,12 +42,27 @@ exports.register = async (req, res, next) => {
       telephoneNumber,
       role,
     });
+    
+    const verificationToken = user.generateVerificationToken();
 
-    sendTokenResponse(user, 200, res);
-  } catch (err) {
-    res.status(400).json({ success: false });
-    console.log(err.stack);
-  }
+    // Send the email with the verification link
+    const verificationUrl = `${process.env.CLIENT_URL}/api/v1/auth/verify-email?token=${verificationToken}`;
+
+    const message = `Hello ${user.name},\n\nPlease verify your email by clicking on the following link:\n\n${verificationUrl}`;
+
+    await sendEmailConfirmation(user.email, "Email Verification", message);
+
+    // Respond to the user
+    res.status(200).json({
+      success: true,
+      message: 'Verification email sent. Please check your inbox.',
+    });
+
+    await user.save();
+    } catch (err) {
+      res.status(400).json({ success: false, error: err.message });
+      console.log(err.stack);
+    }
 };
 
 // @desc    Login a user
@@ -104,14 +127,77 @@ exports.logout = async (req, res, next) => {
 
 exports.updateUser = async (req, res, next) => {
   try {
-    const user = await User.findByIdAndUpdate(req.user.id, req.body, {
-      new: true,
-      runValidators: true,
+    const user = await User.findByIdAndUpdate(req.user.id);
+
+    if (!user) {
+      return res.status(404).json({ success: false, error: 'User not found' });
+    }
+
+    Object.keys(req.body).forEach((key) => {
+      if (key !== 'email') {
+        user[key] = req.body[key];
+      }
     });
 
-    res.status(200).json({ success: true, data: user });
+    await user.save();
+
+    // Check if email is being changed
+    if (req.body.email && req.body.email !== user.email) {
+      user.email = req.body.email;
+      user.isVerified = false;
+
+      const verificationToken = user.generateVerificationToken();
+
+      const verificationUrl = `${process.env.CLIENT_URL}/api/v1/auth/verify-email?token=${verificationToken}`;
+
+      const message = `Hello ${user.name},\n\nPlease verify your email by clicking on the following link:\n\n${verificationUrl}`;
+
+      await sendEmailConfirmation(req.body.email, "Email Verification", message);
+      
+      // Respond to the user
+      res.status(200).json({
+        success: true,
+        message: 'Verification email sent. Please check your inbox.',
+      });
+      
+      await user.save();
+      
+    } else {
+      res.status(200).json({ success: true, data: user});
+    }
+
   } catch (err) {
-    res.status(400).json({ success: false });
+    res.status(400).json({ success: false, erroe: 'Something errors'});
+    console.log(err.stack);
+  }
+};
+
+exports.verifyEmail = async (req, res, next) => {
+  const { token } = req.query;
+
+  try {
+    // Verify the token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.id);
+
+    if (!user) {
+      return res.status(400).json({ success: false, error: 'Invalid token' });
+    }
+
+    // Check if the token is expired
+    if (user.verificationExpires < Date.now()) {
+      return res.status(400).json({ success: false, error: 'Token expired' });
+    }
+
+    // Mark the user as verified
+    user.isVerified = true;
+    user.verificationToken = undefined;
+    user.verificationExpires = undefined;
+    await user.save();
+
+    res.status(200).json({ success: true, message: 'Your email has been verified!' });
+  } catch (err) {
+    res.status(400).json({ success: false, error: 'Invalid or expired token lol' });
     console.log(err.stack);
   }
 };
