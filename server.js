@@ -12,6 +12,8 @@ const rooms = require("./routes/rooms");
 const reservations = require("./routes/reservations");
 const ratings = require("./routes/ratings");
 const auth = require("./routes/auth");
+const emails = require("./routes/emails");
+const users = require("./routes/users");
 
 const app = express();
 const mongoSanitize = require("express-mongo-sanitize");
@@ -64,17 +66,14 @@ app.use("/api/v1/rooms", rooms);
 app.use("/api/v1/reservations", reservations);
 app.use("/api/v1/auth", auth);
 app.use("/api/v1/ratings", ratings);
+app.use("/api/v1/emails", emails);
+app.use("/api/v1/users", users);
 
 const PORT = process.env.PORT || 5000;
 
 const server = app.listen(
   PORT,
-  console.log(
-    "Server running in ",
-    process.env.NODE_ENV,
-    " mode on port ",
-    PORT,
-  ),
+  console.log("Server running in ", process.env.NODE_ENV, "mode on port", PORT),
 );
 
 process.on("unhandledRejection", (err, promise) => {

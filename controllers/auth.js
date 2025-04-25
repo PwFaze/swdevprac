@@ -201,3 +201,33 @@ exports.verifyEmail = async (req, res, next) => {
     console.log(err.stack);
   }
 };
+exports.updateUser = async (req, res, next) => {
+  try {
+    const currentUser = await User.findById(req.user.id);
+    const { email, ...rest } = req.body;
+    const emailChanged = req.body.email && req.body.email !== currentUser.email;
+    if (!emailChanged) {
+      const user = await User.findByIdAndUpdate(req.user.id, req.body, {
+        new: true,
+        runValidators: true,
+      });
+      return res.status(200).json({ success: true, data: user });
+    }
+    const token = crypto.randomBytes(32).toString("hex");
+    await EmailTokens.create({
+      user: req.user.id,
+      email,
+      token,
+      expiresAt: Date.now() + 1000 * 60 * 60, // 1 hour
+      pendingUpdate: rest, // store pending non-email updates here
+    });
+    await sendEmailConfirmation(currentUser.email, token);
+    res.status(200).json({
+      success: true,
+      message: "Please confirm the email change via the email we just sent.",
+    });
+  } catch (err) {
+    res.status(400).json({ success: false });
+    console.log(err.stack);
+  }
+};
