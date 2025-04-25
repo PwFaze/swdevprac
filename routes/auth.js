@@ -11,6 +11,6 @@ router.get("/me", protect, getMe);
 router.get("/logout", logout);
 router.get("/verify-email", verifyEmail);
 
-router.route('/:id').put(protect, authorize("user"), updateUser);
+router.route('/:id').put(protect, authorize("user", "admin"), updateUser);
 
 module.exports = router;
